@@ -9,7 +9,7 @@ def generate_import_docx(
     source_name: str,
     url: str,
     worker_results: list,
-    clean_data: dict | None,
+    clean_data: dict = None,
     output_path: Path,
 ) -> None:
     """

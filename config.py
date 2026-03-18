@@ -1,8 +1,12 @@
 import os
 from pathlib import Path
-from dotenv import load_dotenv
+from typing import Optional
 
-load_dotenv()
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
 
 # Paths
 BASE_DIR = Path(__file__).parent
@@ -15,20 +19,19 @@ TEMPLATES_DIR = BASE_DIR / "templates"
 SCHEMAS_DIR = BASE_DIR / "schemas"
 
 # API Keys — .env locally, Streamlit Secrets on cloud
-def get_groq_api_key() -> str | None:
-    """Read API key at runtime (not import time) so Streamlit secrets work."""
+def get_groq_api_key() -> Optional[str]:
+    """Read API key at runtime so Streamlit secrets work."""
+    # 1. Environment variable (.env or system)
     val = os.getenv("GROQ_API_KEY")
     if val:
         return val
+    # 2. Streamlit secrets (Cloud deployment)
     try:
         import streamlit as st
-        if hasattr(st, "secrets") and "GROQ_API_KEY" in st.secrets:
-            return st.secrets["GROQ_API_KEY"]
+        return st.secrets["GROQ_API_KEY"]
     except Exception:
-        pass
-    return None
+        return None
 
-# Keep for backward compat but prefer get_groq_api_key() in runtime code
 GROQ_API_KEY = get_groq_api_key()
 
 # Model Config

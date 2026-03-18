@@ -11,11 +11,11 @@ import re
 import time
 from datetime import datetime
 from pathlib import Path
-from dotenv import load_dotenv
-
-# Load environment variables
-env_path = Path(__file__).parent / '.env'
-load_dotenv(dotenv_path=env_path, override=True)
+try:
+    from dotenv import load_dotenv
+    load_dotenv(dotenv_path=Path(__file__).parent / '.env', override=True)
+except ImportError:
+    pass
 
 # ─── Country DCIDs ───
 COUNTRY_DCIDS = {
