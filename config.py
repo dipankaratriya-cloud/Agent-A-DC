@@ -15,21 +15,21 @@ TEMPLATES_DIR = BASE_DIR / "templates"
 SCHEMAS_DIR = BASE_DIR / "schemas"
 
 # API Keys — .env locally, Streamlit Secrets on cloud
-def _get_secret(key: str) -> str | None:
-    # 1. Check environment variable (.env or system)
-    val = os.getenv(key)
+def get_groq_api_key() -> str | None:
+    """Read API key at runtime (not import time) so Streamlit secrets work."""
+    val = os.getenv("GROQ_API_KEY")
     if val:
         return val
-    # 2. Check Streamlit secrets (for Streamlit Cloud)
     try:
         import streamlit as st
-        if hasattr(st, "secrets") and key in st.secrets:
-            return st.secrets[key]
+        if hasattr(st, "secrets") and "GROQ_API_KEY" in st.secrets:
+            return st.secrets["GROQ_API_KEY"]
     except Exception:
         pass
     return None
 
-GROQ_API_KEY = _get_secret("GROQ_API_KEY")
+# Keep for backward compat but prefer get_groq_api_key() in runtime code
+GROQ_API_KEY = get_groq_api_key()
 
 # Model Config
 SCRAPER_MODEL = "groq/compound"          # Browser + web search enabled

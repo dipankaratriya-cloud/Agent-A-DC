@@ -9,7 +9,7 @@ import operator
 from typing import TypedDict, Annotated
 from langgraph.graph import StateGraph, END
 
-from config import GROQ_API_KEY, DATA_SCRAPED_DIR, DATA_OUTPUT_DIR
+from config import get_groq_api_key, DATA_SCRAPED_DIR, DATA_OUTPUT_DIR
 from agents.groq_client import GroqCompoundClient
 from utils.prompt_loader import load_prompt
 from utils.file_utils import parse_checklist
@@ -43,7 +43,7 @@ def scraper_node(state: PipelineState) -> dict:
     """
     url = state["url"]
     description = state.get("description", "")
-    client = GroqCompoundClient(api_key=GROQ_API_KEY)
+    client = GroqCompoundClient(api_key=get_groq_api_key())
     prompt_template = load_prompt("scraper.txt")
 
     prompt = f"{prompt_template}\n\nURL to visit: {url}"
@@ -100,7 +100,7 @@ def workers_node(state: PipelineState) -> dict:
     """
     scraped_data = state["scraped_data"]
     description = state.get("description", "")
-    client = GroqCompoundClient(api_key=GROQ_API_KEY)
+    client = GroqCompoundClient(api_key=get_groq_api_key())
 
     checklist_items = parse_checklist()
     all_results = []
@@ -145,7 +145,7 @@ def workers_node(state: PipelineState) -> dict:
 
 def import_doc_node(state: PipelineState) -> dict:
     """Compile worker results into a Word document using the DC Import Doc format."""
-    client = GroqCompoundClient(api_key=GROQ_API_KEY)
+    client = GroqCompoundClient(api_key=get_groq_api_key())
     prompt_template = load_prompt("import_document.txt")
 
     compiled = f"Dataset URL: {state['url']}\n\n"
@@ -179,7 +179,7 @@ def croissant_node(state: PipelineState) -> dict:
     """Compile worker results into Croissant JSON-LD."""
     from config import SCHEMAS_DIR
 
-    client = GroqCompoundClient(api_key=GROQ_API_KEY)
+    client = GroqCompoundClient(api_key=get_groq_api_key())
     prompt_template = load_prompt("croissant.txt")
 
     example_schema = ""
