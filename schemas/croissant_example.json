@@ -1,0 +1,54 @@
+{
+    "@context": {
+        "@vocab": "https://schema.org/",
+        "sc": "https://schema.org/",
+        "cr": "http://mlcommons.org/croissant/",
+        "ml": "http://mlcommons.org/schema/"
+    },
+    "@type": "sc:Dataset",
+    "name": "Titanic",
+    "description": "The original Titanic dataset, describing the status of individual passengers on the Titanic.",
+    "url": "https://www.openml.org/d/40945",
+    "license": "afl-3.0",
+    "version": "1.0.0",
+    "datePublished": "2023-07-01",
+    "dateModified": "2023-07-01",
+    "distribution": [
+        {
+            "@type": "cr:FileObject",
+            "name": "passengers.csv",
+            "contentUrl": "https://www.openml.org/data/get_csv/16826755/phpMYEkMl",
+            "encodingFormat": "text/csv",
+            "contentSize": "117743 B"
+        }
+    ],
+    "recordSet": [
+        {
+            "@type": "cr:RecordSet",
+            "name": "passengers",
+            "description": "Passenger records from the Titanic.",
+            "field": [
+                {
+                    "@type": "cr:Field",
+                    "name": "name",
+                    "description": "Name of the passenger",
+                    "dataType": "sc:Text",
+                    "source": {
+                        "fileObject": "passengers.csv",
+                        "column": "name"
+                    }
+                },
+                {
+                    "@type": "cr:Field",
+                    "name": "survived",
+                    "description": "Whether the passenger survived",
+                    "dataType": "sc:Boolean",
+                    "source": {
+                        "fileObject": "passengers.csv",
+                        "column": "survived"
+                    }
+                }
+            ]
+        }
+    ]
+}

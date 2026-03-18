@@ -1,0 +1,14 @@
+.env
+__pycache__/
+*.pyc
+venv/
+.venv/
+data/raw/*
+data/scraped/*
+data/output/*
+!data/raw/.gitkeep
+!data/scraped/.gitkeep
+!data/output/.gitkeep
+*.docx
+.DS_Store
+.claude/

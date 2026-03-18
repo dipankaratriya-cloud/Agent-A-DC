@@ -1,0 +1,30 @@
+You receive the output from 20 metadata extraction agents about a dataset.
+Compile their findings into a clean, concise JSON for a Data Commons Import Document.
+
+Extract ONLY the key facts — no evidence, no confidence scores, no markdown formatting.
+Keep values short and direct, like a human would fill in a form.
+
+Output this EXACT JSON structure:
+{
+    "about": "2-3 sentence summary of what data the dataset contains",
+    "data_source_summary": "Brief summary: geography, data format, download method, license constraints",
+    "link_to_data": "Direct URL to dataset preview or raw data",
+    "link_explains_dataset": "URL to metadata or documentation page",
+    "place_types": "e.g., Provinces and Territories of Canada",
+    "place_id_resolution": "e.g., country/CAN",
+    "date_range": "e.g., 1971-2025",
+    "num_variables": "e.g., ~6 across age, gender, geography",
+    "top_level_missing": "No, or describe what's missing",
+    "refresh_cycle": "e.g., Yearly, Monthly, Quarterly",
+    "code_data_location": "URL or path to code/data, or empty",
+    "license": "License name and/or URL",
+    "stat_var_categories": "populationType, measuredProperty, constraint properties",
+    "notes": "Any caveats, gaps in data, rate limits, or special considerations"
+}
+
+Rules:
+- Use ONLY information from the agent outputs. Do NOT invent data.
+- If an agent said "Not found", put "Not found" for that field.
+- Strip out all markdown (**bold**, etc.), evidence quotes, and confidence scores.
+- Values should be concise — one line each, not paragraphs.
+- Output ONLY valid JSON. No markdown fences, no explanation text.

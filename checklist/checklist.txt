@@ -1,0 +1,33 @@
+# Data Analysis Checklist
+# Format: id | prompt_file | description
+# Each line = one isolated agent with ONE job
+
+# ── A. Initial Data Source Assessment ──
+A1  | worker_core_attributes.txt     | Core Attributes Present? (Place, Period, Variable, Values)
+A2  | worker_data_vertical.txt       | Data Vertical (Level 1) Identified? (e.g., Education, Health)
+A3  | worker_geo_level.txt           | Geo Level Identified? (Country, AA1, AA2)
+A4  | worker_license_check.txt       | License is Public & Permissible? (e.g., CC BY 4.0)
+A5  | worker_license_url.txt         | License URL Documented?
+
+# ── B. Source Format & Acquisition Plan ──
+B6   | worker_parent_url.txt          | Parent/Provenance URL (page where the report belongs)
+B6.1 | worker_child_urls.txt          | Child Source URL(s) (direct download links)
+B7   | worker_source_format.txt       | Source Format Identified? (CSV, API, XLS)
+B8   | worker_programmatic_access.txt | Programmatic Access Feasible? (Yes/No)
+B9   | worker_rate_limits.txt         | Rate Limits Noted? (Yes/No)
+B10  | worker_sample_url.txt          | Sample Source URL Provided?
+B10.1| worker_metadata_urls.txt       | Document URLs for metadata
+B11  | worker_download_steps.txt      | Download Steps Documented?
+
+# ── B+ Dataset Catalog ──
+D1   | worker_dataset_list.txt          | List all datasets with download URLs or steps
+
+# ── C. Data Availability & Periodicity ──
+C12   | worker_min_date.txt            | Min Date
+C13   | worker_max_date.txt            | Max Date
+C14   | worker_periodicity.txt         | Periodicity of Data (Annually, Monthly, etc.)
+C14.1 | worker_date_resolution.txt     | Date Resolution (ISO format YYYY-MM-DD)
+C14.2 | worker_place_resolution.txt    | Place Resolution & Place Types (Code vs Text)
+C15   | worker_refresh_frequency.txt   | Refresh/Release Frequency
+C16   | worker_last_refresh.txt        | Last Refresh Date in Source
+C17   | worker_next_refresh.txt        | Next Expected Refresh Date
