@@ -749,9 +749,9 @@ def main():
             <p style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: #94a3b8 !important; font-weight: 600; margin-bottom: 0.5rem;">Configuration</p>
         </div>
         """, unsafe_allow_html=True)
-        api_key = os.getenv('GROQ_API_KEY')
+        api_key = os.getenv('GROQ_API_KEY') or st.secrets.get("GROQ_API_KEY", None)
         if api_key: st.success("API Key loaded")
-        else: st.error("No GROQ_API_KEY in .env")
+        else: st.error("No GROQ_API_KEY — set in .env or Streamlit Secrets")
 
         st.markdown("---")
         st.markdown("""
