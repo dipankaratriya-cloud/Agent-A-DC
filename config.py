@@ -16,14 +16,18 @@ SCHEMAS_DIR = BASE_DIR / "schemas"
 
 # API Keys — .env locally, Streamlit Secrets on cloud
 def _get_secret(key: str) -> str | None:
+    # 1. Check environment variable (.env or system)
     val = os.getenv(key)
     if val:
         return val
+    # 2. Check Streamlit secrets (for Streamlit Cloud)
     try:
         import streamlit as st
-        return st.secrets.get(key)
+        if hasattr(st, "secrets") and key in st.secrets:
+            return st.secrets[key]
     except Exception:
-        return None
+        pass
+    return None
 
 GROQ_API_KEY = _get_secret("GROQ_API_KEY")
 
