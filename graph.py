@@ -29,6 +29,7 @@ class PipelineState(TypedDict):
     scraped_data_path: str
     worker_results: Annotated[list, operator.add]
     import_doc_path: str
+    clean_data: dict
     croissant_path: str
     token_usage: Annotated[dict, _merge_tokens]
     error: str
@@ -170,7 +171,11 @@ def import_doc_node(state: PipelineState) -> dict:
     output_path = DATA_OUTPUT_DIR / "import_document.docx"
     source_name = state.get("source_name", "") or state["url"]
     generate_import_docx(source_name, state["url"], state["worker_results"], clean_data, output_path)
-    return {"import_doc_path": str(output_path), "token_usage": client.get_token_usage()}
+    return {
+        "import_doc_path": str(output_path),
+        "clean_data": clean_data or {},
+        "token_usage": client.get_token_usage(),
+    }
 
 
 # ─── Node: Croissant ───

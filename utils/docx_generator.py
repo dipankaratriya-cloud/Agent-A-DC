@@ -1,3 +1,4 @@
+import json
 from docx import Document
 from docx.shared import Pt
 from docx.enum.text import WD_ALIGN_PARAGRAPH
@@ -11,6 +12,7 @@ def generate_import_docx(
     worker_results: list,
     clean_data: dict,
     output_path: Path,
+    validation_rules: list | None = None,
 ) -> None:
     """
     Generate a Data Commons Import Document (.docx).
@@ -117,6 +119,19 @@ def generate_import_docx(
         doc.add_paragraph(notes)
     else:
         doc.add_paragraph("No additional notes.")
+
+    # ─── Validation Rules (optional) ───
+    if validation_rules:
+        doc.add_heading("Validation Rules", level=1)
+        doc.add_paragraph(
+            "Machine-readable validation rules applied to this dataset import, "
+            "in Data Commons validation_config.json format."
+        )
+        payload = {"schema_version": "1.0", "rules": validation_rules}
+        rules_para = doc.add_paragraph()
+        rules_run = rules_para.add_run(json.dumps(payload, indent=2))
+        rules_run.font.name = "Courier New"
+        rules_run.font.size = Pt(9)
 
     doc.save(str(output_path))
 

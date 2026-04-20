@@ -185,9 +185,11 @@ def run_pipeline_job(job_id: str, source_name: str, description: str):
         job["status"] = "completed"
         job["results"] = {
             "url": url,
+            "source_name": source_name,
             "scraped_data": result.get("scraped_data", {}),
             "scraped_data_path": result.get("scraped_data_path", ""),
             "worker_results": result.get("worker_results", []),
+            "clean_data": result.get("clean_data", {}),
             "import_doc_path": import_path,
             "croissant_path": croissant_path,
             "token_usage": result.get("token_usage", {}),
@@ -423,17 +425,18 @@ def download_output(job_id: str):
 
 @app.post("/api/validation-config")
 def save_validation_config(req: ValidationConfigRequest):
-    """Save and return a validation_config.json file."""
-    config = {
-        "schema_version": req.schema_version,
-        "rules": [r.model_dump() for r in req.rules],
-    }
+    """Save a validation_config.json file and, if a job_id is provided,
+    regenerate that job's import_document.docx with a Validation Rules
+    section appended at the bottom."""
+    rules = [r.model_dump() for r in req.rules]
     # Clean up empty scope objects from rules
-    for rule in config["rules"]:
+    for rule in rules:
         if not rule.get("scope"):
             rule.pop("scope", None)
         if not rule.get("params"):
             rule.pop("params", None)
+
+    config = {"schema_version": req.schema_version, "rules": rules}
 
     if req.job_id:
         out_dir = DATA_OUTPUT_DIR / req.job_id
@@ -443,6 +446,28 @@ def save_validation_config(req: ValidationConfigRequest):
         path = DATA_OUTPUT_DIR / "validation_config.json"
 
     path.write_text(json.dumps(config, indent=2))
+
+    # Regenerate the import doc with validation rules appended, if we have the job context.
+    if req.job_id:
+        job = jobs.get(req.job_id)
+        if job and job.get("status") == "completed":
+            results = job.get("results", {})
+            import_path = results.get("import_doc_path")
+            if import_path:
+                try:
+                    from utils.docx_generator import generate_import_docx
+                    generate_import_docx(
+                        results.get("source_name", "") or results.get("url", ""),
+                        results.get("url", ""),
+                        results.get("worker_results", []),
+                        results.get("clean_data", {}),
+                        Path(import_path),
+                        validation_rules=rules,
+                    )
+                except Exception:
+                    # Non-fatal: still return the validation_config.json.
+                    pass
+
     return FileResponse(path, filename="validation_config.json", media_type="application/json")
 
 

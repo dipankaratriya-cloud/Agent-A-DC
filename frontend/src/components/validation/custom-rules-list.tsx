@@ -10,7 +10,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { Plus, X, ChevronDown, PenLine, MessageSquareText } from "lucide-react";
+import { Plus, X, ChevronDown, PenLine, MessageSquareText, Pencil, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { DEFAULT_VALIDATORS, VALIDATOR_NAMES } from "@/lib/validation-defaults";
 import type { RuleState } from "./default-rules-list";
@@ -326,6 +326,7 @@ export function CustomRulesList({ rules, onAdd, onRemove, onUpdate }: CustomRule
               key={rule.rule_id}
               rule={rule}
               onRemove={() => onRemove(rule.rule_id)}
+              onUpdate={(updates) => onUpdate(rule.rule_id, updates)}
             />
           ))}
         </div>
@@ -337,13 +338,82 @@ export function CustomRulesList({ rules, onAdd, onRemove, onUpdate }: CustomRule
 function CustomRuleCard({
   rule,
   onRemove,
+  onUpdate,
 }: {
   rule: RuleState;
   onRemove: () => void;
+  onUpdate: (updates: Partial<RuleState>) => void;
 }) {
   const [expanded, setExpanded] = useState(false);
+  const [editing, setEditing] = useState(false);
   const isKnown = VALIDATOR_NAMES.includes(rule.validator);
   const description = rule.params._description as string | undefined;
+
+  // Edit state, seeded from the rule when edit mode opens
+  const [editValidator, setEditValidator] = useState(rule.validator);
+  const [editParamsRaw, setEditParamsRaw] = useState("");
+  const [editDescription, setEditDescription] = useState("");
+  const [editScopeDcids, setEditScopeDcids] = useState("");
+  const [editScopeRegex, setEditScopeRegex] = useState("");
+  const [editScopeContainsAll, setEditScopeContainsAll] = useState("");
+  const [parseError, setParseError] = useState("");
+
+  const openEdit = () => {
+    const { _description, ...rest } = rule.params;
+    setEditValidator(rule.validator);
+    setEditParamsRaw(
+      Object.keys(rest).length > 0 ? JSON.stringify(rest, null, 2) : ""
+    );
+    setEditDescription(typeof _description === "string" ? _description : "");
+    setEditScopeDcids(rule.scope.variables.dcids.join(", "));
+    setEditScopeRegex(rule.scope.variables.regex.join(", "));
+    setEditScopeContainsAll(rule.scope.variables.contains_all.join(", "));
+    setParseError("");
+    setEditing(true);
+    setExpanded(true);
+  };
+
+  const cancelEdit = () => {
+    setEditing(false);
+    setParseError("");
+  };
+
+  const saveEdit = () => {
+    const cleanParams: Record<string, unknown> = {};
+    if (editParamsRaw.trim()) {
+      try {
+        const parsed = JSON.parse(editParamsRaw.trim());
+        if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
+          setParseError("Parameters must be a JSON object.");
+          return;
+        }
+        Object.assign(cleanParams, parsed);
+      } catch {
+        setParseError("Parameters must be valid JSON.");
+        return;
+      }
+    }
+    if (editDescription.trim()) {
+      cleanParams._description = editDescription.trim();
+    }
+
+    onUpdate({
+      validator: editValidator.trim() || rule.validator,
+      params: cleanParams,
+      scope: {
+        variables: {
+          dcids: editScopeDcids.split(",").map((s) => s.trim()).filter(Boolean),
+          regex: editScopeRegex.split(",").map((s) => s.trim()).filter(Boolean),
+          contains_all: editScopeContainsAll
+            .split(",")
+            .map((s) => s.trim())
+            .filter(Boolean),
+        },
+      },
+    });
+    setEditing(false);
+    setParseError("");
+  };
 
   return (
     <div className="border border-slate-200 rounded-xl p-3 bg-white">
@@ -367,6 +437,17 @@ function CustomRuleCard({
           )}
         </div>
 
+        {!editing && (
+          <button
+            onClick={openEdit}
+            className="p-1 rounded hover:bg-indigo-50 text-slate-400 hover:text-indigo-600 transition-colors"
+            aria-label="Edit rule"
+            title="Edit rule"
+          >
+            <Pencil className="w-4 h-4" />
+          </button>
+        )}
+
         <button
           onClick={() => setExpanded(!expanded)}
           className="p-1 rounded hover:bg-slate-100 transition-colors"
@@ -387,7 +468,7 @@ function CustomRuleCard({
         </button>
       </div>
 
-      {description && (
+      {description && !editing && (
         <p className="mt-1.5 text-xs text-amber-600 italic bg-amber-50 px-2 py-1 rounded">
           {description}
         </p>
@@ -395,22 +476,105 @@ function CustomRuleCard({
 
       <Collapsible open={expanded} onOpenChange={setExpanded}>
         <CollapsibleContent>
-          <pre className="mt-2 text-xs text-slate-600 bg-slate-50 rounded-lg p-3 overflow-auto font-mono">
-            {JSON.stringify(
-              {
-                rule_id: rule.rule_id,
-                validator: rule.validator,
-                ...(Object.keys(rule.params).length > 0 ? { params: rule.params } : {}),
-                ...(rule.scope.variables.dcids.length > 0 ||
-                rule.scope.variables.regex.length > 0 ||
-                rule.scope.variables.contains_all.length > 0
-                  ? { scope: rule.scope }
-                  : {}),
-              },
-              null,
-              2
-            )}
-          </pre>
+          {editing ? (
+            <div className="mt-3 space-y-3 bg-slate-50 rounded-lg p-3 border border-slate-200">
+              <div>
+                <label className="text-xs text-slate-500 font-medium mb-1 block">
+                  Validator
+                </label>
+                <Input
+                  value={editValidator}
+                  onChange={(e) => setEditValidator(e.target.value)}
+                  className="h-8 text-sm"
+                />
+              </div>
+              <div>
+                <label className="text-xs text-slate-500 font-medium mb-1 block">
+                  Parameters (JSON object)
+                </label>
+                <Textarea
+                  value={editParamsRaw}
+                  onChange={(e) => setEditParamsRaw(e.target.value)}
+                  placeholder='{"threshold": 5}'
+                  className="text-sm min-h-[90px] font-mono"
+                />
+                {parseError && (
+                  <p className="text-xs text-red-500 mt-1">{parseError}</p>
+                )}
+              </div>
+              <div>
+                <label className="text-xs text-slate-500 font-medium mb-1 block">
+                  Description (optional)
+                </label>
+                <Textarea
+                  value={editDescription}
+                  onChange={(e) => setEditDescription(e.target.value)}
+                  className="text-sm min-h-[50px]"
+                />
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                <div>
+                  <label className="text-xs text-slate-400 mb-0.5 block">DCIDs</label>
+                  <Input
+                    value={editScopeDcids}
+                    onChange={(e) => setEditScopeDcids(e.target.value)}
+                    placeholder="Comma-separated"
+                    className="h-8 text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs text-slate-400 mb-0.5 block">Regex</label>
+                  <Input
+                    value={editScopeRegex}
+                    onChange={(e) => setEditScopeRegex(e.target.value)}
+                    placeholder="Comma-separated"
+                    className="h-8 text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs text-slate-400 mb-0.5 block">
+                    Contains All
+                  </label>
+                  <Input
+                    value={editScopeContainsAll}
+                    onChange={(e) => setEditScopeContainsAll(e.target.value)}
+                    placeholder="Comma-separated"
+                    className="h-8 text-sm"
+                  />
+                </div>
+              </div>
+              <div className="flex gap-2 justify-end pt-1">
+                <Button variant="ghost" size="sm" onClick={cancelEdit}>
+                  Cancel
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={saveEdit}
+                  className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white"
+                >
+                  <Check className="w-4 h-4 mr-1" />
+                  Save
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <pre className="mt-2 text-xs text-slate-600 bg-slate-50 rounded-lg p-3 overflow-auto font-mono">
+              {JSON.stringify(
+                {
+                  rule_id: rule.rule_id,
+                  validator: rule.validator,
+                  ...(Object.keys(rule.params).length > 0 ? { params: rule.params } : {}),
+                  ...(rule.scope.variables.dcids.length > 0 ||
+                  rule.scope.variables.regex.length > 0 ||
+                  rule.scope.variables.contains_all.length > 0
+                    ? { scope: rule.scope }
+                    : {}),
+                },
+                null,
+                2
+              )}
+            </pre>
+          )}
         </CollapsibleContent>
       </Collapsible>
     </div>
